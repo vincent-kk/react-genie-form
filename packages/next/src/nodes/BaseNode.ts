@@ -49,7 +49,7 @@ abstract class BaseNode {
       this.name = name;
       this.updatePath();
     }
-  }
+  };
   updatePath = () => {
     const newPath = this.parentNode?.getPath()
       ? `${this.parentNode.getPath()}${JSONPath.Child}${this.getName()}`
@@ -58,16 +58,16 @@ abstract class BaseNode {
       this.path = newPath;
       this.publish('pathChange', newPath);
     }
-  }
+  };
   getName = () => {
     return this.name;
-  }
+  };
   getPath = () => {
     return this.path;
-  }
+  };
   getKey = () => {
     return this.key;
-  }
+  };
   // //need refactoring
 
   getErrors = (): any[] | null => {
@@ -106,14 +106,14 @@ abstract class BaseNode {
   removeFromReceivedErrors = (errors: any[]) => {
     const errorKeysToDelete = errors
       .map(({ key }: any) => key)
-      .filter(key => typeof key === 'number');
+      .filter((key) => typeof key === 'number');
     const nextErrors = this._receivedErrors.filter((e: any) => {
-      return !errorKeysToDelete.includes(e.key)
-    })
+      return !errorKeysToDelete.includes(e.key);
+    });
     if (this._receivedErrors.length !== nextErrors.length) {
       this.setReceivedErrors(nextErrors);
     }
-  }
+  };
 
   getState = () => this._state;
   setState = (state: Function | { [key: string]: any }) => {
@@ -153,9 +153,9 @@ abstract class BaseNode {
   subscribe = (callback: Listener) => {
     this._listeners.push(callback);
     return () =>
-    (this._listeners = this._listeners.filter(
-      (listener) => listener !== callback,
-    ));
+      (this._listeners = this._listeners.filter(
+        (listener) => listener !== callback,
+      ));
   };
   publish = (type: string, payload: any) => {
     this._listeners.forEach((listener) => listener(type, payload));
@@ -190,7 +190,9 @@ abstract class BaseNode {
       ? `${this.parentNode.getPath()}${JSONPath.Child}${this.getName()}`
       : JSONPath.Root;
     this.key = this.parentNode?.getPath()
-      ? `${this.parentNode.getPath()}${JSONPath.Child}${typeof key === 'undefined' ? this.getName() : key}`
+      ? `${this.parentNode.getPath()}${JSONPath.Child}${
+          typeof key === 'undefined' ? this.getName() : key
+        }`
       : JSONPath.Root;
 
     this.depth = this.path.split(JSONPath.Child).filter(Boolean).length - 1;
@@ -211,7 +213,7 @@ abstract class BaseNode {
       let ajvValidate: Function;
       try {
         ajvValidate = ajvInstance.compile({ ...schema, $async: true });
-      } catch (err) {
+      } catch (err: any) {
         ajvValidate = async () => {
           throw {
             errors: [
@@ -225,7 +227,7 @@ abstract class BaseNode {
         let nextErrors = [];
         try {
           await ajvValidate(value);
-        } catch (err) {
+        } catch (err: any) {
           nextErrors = err.errors;
         }
         return nextErrors;
@@ -299,11 +301,20 @@ function find(target: any, path: string): BaseNode | any {
 let keySeq = 0;
 
 export const transformErrors = (errors: any, useKey = false) => {
-
   return (Array.isArray(errors) ? errors : []).map((error: any) => {
     let key = useKey ? ++keySeq : undefined;
-    if (typeof error.dataPath === 'string' && error.keyword === 'required' && error.params?.missingProperty) {
-      return { ...error, key, dataPath: `${error.dataPath ? `${error.dataPath}.` : ''}${error.params.missingProperty}` };
+    if (
+      typeof error.dataPath === 'string' &&
+      error.keyword === 'required' &&
+      error.params?.missingProperty
+    ) {
+      return {
+        ...error,
+        key,
+        dataPath: `${error.dataPath ? `${error.dataPath}.` : ''}${
+          error.params.missingProperty
+        }`,
+      };
     }
     return { ...error, key };
   }, []);
